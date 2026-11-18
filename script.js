@@ -1,9 +1,10 @@
-// ضع هنا رابط السيرفر على Hugging Face Spaces (بدون / في النهاية)
+// ضع هنا رابط السيرفر بعد رفعه على Hugging Face Spaces (بدون شرطة مائلة / في النهاية)
 const BACKEND_URL = 'https://YOUR-SPACE-NAME.hf.space';
 
-const API_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+const isLocalhost = window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost';
+const API_URL = isLocalhost
     ? 'http://127.0.0.1:7860/process_video'
-    : `${BACKEND_URL}/process_video`;
+    : `${BACKEND_URL.replace(/\/+$/, '')}/process_video`;
 
 document.addEventListener('DOMContentLoaded', () => {
     const fileDropArea = document.getElementById('fileDropArea');
@@ -130,6 +131,11 @@ document.addEventListener('DOMContentLoaded', () => {
     processVideoBtn.addEventListener('click', () => {
         if (!selectedFile) return;
 
+        if (!isLocalhost && BACKEND_URL.includes('YOUR-SPACE-NAME')) {
+            setStatus('لم يتم ربط السيرفر بعد: ضع رابط Hugging Face Space في متغير BACKEND_URL داخل ملف script.js.', 'error');
+            return;
+        }
+
         processVideoBtn.disabled = true;
         removeFileBtn.disabled = true;
         downloadArea.style.display = 'none';
@@ -229,7 +235,7 @@ document.addEventListener('DOMContentLoaded', () => {
             processVideoBtn.disabled = false;
             removeFileBtn.disabled = false;
             progressSection.style.display = 'none';
-            setStatus('تعذر الاتصال بالخادم. تأكد من تشغيل السيرفر وصحة رابط BACKEND_URL.', 'error');
+            setStatus('تعذر الاتصال بالخادم. تأكد من أن السيرفر في حالة Running وأن رابط BACKEND_URL صحيح.', 'error');
         };
 
         xhr.send(formData);
