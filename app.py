@@ -9,6 +9,11 @@ from pathlib import Path
 import uuid
 from werkzeug.utils import secure_filename
 
+# تحديد مسار ثابت للموديلات لتجنب مشاكل الصلاحيات على السيرفرات
+MODELS_FOLDER = Path('models').resolve()
+MODELS_FOLDER.mkdir(exist_ok=True)
+os.environ.setdefault('TORCH_HOME', str(MODELS_FOLDER))
+
 app = Flask(__name__, static_folder='.', static_url_path='')
 CORS(app)
 
@@ -22,7 +27,6 @@ TEMP_FOLDER.mkdir(exist_ok=True)
 
 
 def cleanup_old_processed_files(max_age_seconds=3600):
-    """حذف الفيديوهات المعالجة القديمة لتوفير مساحة السيرفر"""
     now = time.time()
     for item in PROCESSED_FOLDER.glob('*'):
         try:
@@ -37,6 +41,15 @@ def index():
     if Path('index.html').exists():
         return send_file('index.html')
     return jsonify({"status": "running", "service": "CN AI Music Remover API"})
+
+
+@app.route('/health')
+def health():
+    return jsonify({
+        "status": "ok",
+        "ffmpeg": bool(shutil.which("ffmpeg")),
+        "torch_home": os.environ.get('TORCH_HOME')
+    })
 
 
 @app.route('/process_video', methods=['POST'])
@@ -60,7 +73,8 @@ def process_video():
 
     input_video_path = UPLOAD_FOLDER / f"{unique_id}_original{file_extension}"
     temp_audio_path = TEMP_FOLDER / f"{unique_id}_audio.wav"
-    demucs_output_dir = TEMP_FOLDER / "htdemucs_ft" / temp_audio_path.stem
+    model_name = "htdemucs"
+    demucs_output_dir = TEMP_FOLDER / model_name / temp_audio_path.stem
     actual_vocals_path = demucs_output_dir / "vocals.wav"
     output_video_path = PROCESSED_FOLDER / f"{unique_id}_{safe_stem}_nomusic.mp4"
 
@@ -75,34 +89,51 @@ def process_video():
             str(temp_audio_path)
         ], check=True, capture_output=True)
 
-        # 2. فصل الصوت البشري عن الموسيقى باستخدام Demucs
+        # 2. فصل الصوت البشري عن الموسيقى (htdemucs أسرع وأخف على الذاكرة)
         app.logger.info(f"Separating music using Demucs for {temp_audio_path}")
         subprocess.run([
             sys.executable, "-m", "demucs",
             "--two-stems=vocals",
-            "-n", "htdemucs_ft",
+            "-n", model_name,
             "-o", str(TEMP_FOLDER),
-            "--shifts", "5",
+            "--shifts", "1",
             str(temp_audio_path)
         ], check=True, capture_output=True)
 
         if not actual_vocals_path.exists():
             raise FileNotFoundError("لم يتمكن Demucs من إنتاج ملف الصوت المعزول (vocals.wav).")
 
-        # 3. دمج الفيديو الأصلي مع الصوت المعزول فقط
+        # 3. دمج الفيديو الأصلي مع الصوت المعزول (مع بديل تلقائي إذا لم يقبل الفيديو النسخ المباشر)
         app.logger.info(f"Remuxing video with vocals only to {output_video_path}")
-        subprocess.run([
-            "ffmpeg", "-y",
-            "-i", str(input_video_path),
-            "-i", str(actual_vocals_path),
-            "-map", "0:v:0",
-            "-map", "1:a:0",
-            "-c:v", "copy",
-            "-c:a", "aac",
-            "-b:a", "192k",
-            "-shortest",
-            str(output_video_path)
-        ], check=True, capture_output=True)
+        try:
+            subprocess.run([
+                "ffmpeg", "-y",
+                "-i", str(input_video_path),
+                "-i", str(actual_vocals_path),
+                "-map", "0:v:0",
+                "-map", "1:a:0",
+                "-c:v", "copy",
+                "-c:a", "aac",
+                "-b:a", "192k",
+                "-shortest",
+                str(output_video_path)
+            ], check=True, capture_output=True)
+        except subprocess.CalledProcessError:
+            # في حال كانت صيغة الفيديو الأصلية (مثل WebM/VP9) لا تقبل copy داخل MP4
+            subprocess.run([
+                "ffmpeg", "-y",
+                "-i", str(input_video_path),
+                "-i", str(actual_vocals_path),
+                "-map", "0:v:0",
+                "-map", "1:a:0",
+                "-c:v", "libx264",
+                "-preset", "veryfast",
+                "-crf", "23",
+                "-c:a", "aac",
+                "-b:a", "192k",
+                "-shortest",
+                str(output_video_path)
+            ], check=True, capture_output=True)
 
         return send_file(
             output_video_path,
@@ -115,7 +146,8 @@ def process_video():
         app.logger.error(f"FFmpeg/Demucs error: {err_msg}")
         if "does not contain any stream" in err_msg or "Output file does not contain any stream" in err_msg:
             return jsonify({"error": "الفيديو المرفوع لا يحتوي على مسار صوتي."}), 400
-        return jsonify({"error": "فشلت المعالجة أثناء تشغيل FFmpeg أو Demucs."}), 500
+        last_line = err_msg.strip().splitlines()[-1] if err_msg.strip() else "خطأ غير معروف"
+        return jsonify({"error": f"فشل أثناء المعالجة: {last_line}"}), 500
 
     except FileNotFoundError as e:
         app.logger.error(f"File not found: {e}")
