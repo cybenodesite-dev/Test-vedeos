@@ -7,15 +7,18 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
 
 WORKDIR /app
 
+ENV TORCH_HOME=/app/models
+
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-RUN python -c "import demucs.pretrained; demucs.pretrained.get_model('htdemucs_ft')"
+RUN mkdir -p /app/models uploads processed temp_demucs_work && \
+    python -c "import demucs.pretrained; demucs.pretrained.get_model('htdemucs')"
 
 COPY app.py .
 
-RUN mkdir -p uploads processed temp_demucs_work && chmod -R 777 /app
+RUN chmod -R 777 /app
 
 EXPOSE 7860
 
-CMD ["gunicorn", "--bind", "0.0.0.0:7860", "--timeout", "600", "app:app"]
+CMD ["gunicorn", "--bind", "0.0.0.0:7860", "--workers", "1", "--timeout", "600", "app:app"]
