@@ -1,4 +1,4 @@
-// ضع هنا رابط السيرفر بعد رفعه على Hugging Face Spaces (بدون شرطة مائلة / في النهاية)
+// ضع هنا رابط السيرفر على Hugging Face Spaces (بدون / في النهاية)
 const BACKEND_URL = 'https://YOUR-SPACE-NAME.hf.space';
 
 const API_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
@@ -157,6 +157,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const xhr = new XMLHttpRequest();
         xhr.open('POST', API_URL, true);
         xhr.responseType = 'blob';
+        xhr.timeout = 600000;
 
         xhr.upload.onprogress = (event) => {
             if (event.lengthComputable) {
@@ -173,7 +174,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             progressBar.style.width = `${currentProgress}%`;
                             progressPercent.textContent = `${currentProgress}%`;
                         }
-                    }, 1800);
+                    }, 1500);
                 }
             }
         };
@@ -199,14 +200,28 @@ document.addEventListener('DOMContentLoaded', () => {
                 downloadArea.style.display = 'block';
             } else {
                 progressSection.style.display = 'none';
-                let errorMsg = 'حدث خطأ أثناء معالجة الفيديو.';
+                let errorMsg = `كود الخطأ (${xhr.status})`;
                 try {
                     const text = await xhr.response.text();
                     const parsed = JSON.parse(text);
                     if (parsed.error) errorMsg = parsed.error;
-                } catch (_) {}
+                } catch (_) {
+                    if (xhr.status === 502 || xhr.status === 504) {
+                        errorMsg = `السيرفر استغرق وقتاً طويلاً أو امتلأت الذاكرة (${xhr.status})، جرّب فيديو أقصر.`;
+                    } else if (xhr.status === 404) {
+                        errorMsg = 'الرابط غير صحيح (404) - تأكد من رابط BACKEND_URL في script.js.';
+                    }
+                }
                 setStatus(`فشلت المعالجة: ${errorMsg}`, 'error');
             }
+        };
+
+        xhr.ontimeout = () => {
+            clearTimers();
+            processVideoBtn.disabled = false;
+            removeFileBtn.disabled = false;
+            progressSection.style.display = 'none';
+            setStatus('انتهت مهلة الاتصال بالسيرفر، جرّب فيديو أقصر.', 'error');
         };
 
         xhr.onerror = () => {
@@ -214,7 +229,7 @@ document.addEventListener('DOMContentLoaded', () => {
             processVideoBtn.disabled = false;
             removeFileBtn.disabled = false;
             progressSection.style.display = 'none';
-            setStatus('تعذر الاتصال بالخادم. تأكد من أن السيرفر يعمل وأن رابط BACKEND_URL صحيح.', 'error');
+            setStatus('تعذر الاتصال بالخادم. تأكد من تشغيل السيرفر وصحة رابط BACKEND_URL.', 'error');
         };
 
         xhr.send(formData);
