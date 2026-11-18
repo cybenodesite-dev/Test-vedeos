@@ -3,198 +3,109 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>موقعنا الاحترافي - CN AI</title>
-    <meta name="description" content="موقع احترافي وجذاب يقدم خدمات متنوعة بتصميم عصري ومتكامل.">
-    
-    <!-- Google Fonts: Montserrat (عناوين) & Open Sans (نصوص) -->
-    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;700&family=Open+Sans:wght@400;600&display=swap" rel="stylesheet">
-    <!-- Font Awesome Icons -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    
-    <!-- ملف CSS المخصص -->
+    <title>إزالة الموسيقى من الفيديو - CN AI</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
-    <!-- Header Section -->
-    <header class="main-header">
-        <div class="container">
-            <a href="#" class="logo">CN AI</a>
-            <nav class="main-nav">
-                <ul class="nav-list">
-                    <li><a href="#hero">الرئيسية</a></li>
-                    <li><a href="#about">عنّا</a></li>
-                    <li><a href="#services">خدماتنا</a></li>
-                    <li><a href="#music-remover">إزالة الموسيقى</a></li>
-                    <li><a href="#contact">تواصل معنا</a></li>
-                </ul>
-                <button class="menu-toggle" aria-label="Toggle navigation">
-                    <i class="fas fa-bars"></i>
-                </button>
-            </nav>
+
+    <header class="app-header">
+        <div class="container header-content">
+            <div class="brand">
+                <i class="fas fa-wave-square"></i>
+                <span>CN AI</span>
+            </div>
+            <span class="badge">عزل الصوت بالذكاء الاصطناعي</span>
         </div>
     </header>
 
-    <!-- Hero Section -->
-    <section id="hero" class="hero-section">
+    <main class="app-wrapper">
         <div class="container">
-            <div class="hero-content">
-                <h1>نحن نصنع المستقبل الرقمي لعملك</h1>
-                <p>حلول برمجية مبتكرة وتصميمات جذابة لنمو أعمالك وتحقيق أهدافك.</p>
-                <a href="#contact" class="btn btn-primary">ابدأ مشروعك الآن</a>
-            </div>
-        </div>
-    </section>
+            <div class="tool-card">
+                <div class="tool-header">
+                    <h1>إزالة الموسيقى من الفيديو</h1>
+                    <p>ارفع الفيديو وسيقوم النظام بعزل الموسيقى والاحتفاظ بصوت الكلام أو الغناء فقط.</p>
+                </div>
 
-    <!-- About Section -->
-    <section id="about" class="about-section section-padding">
-        <div class="container">
-            <h2 class="section-title">من نحن؟</h2>
-            <div class="about-content">
-                <p>نحن فريق من المطورين والمصممين الشغوفين، متخصصون في بناء وتطوير أنظمة الويب والتطبيقات التي تلبي احتياجات عملائنا بدقة واحترافية. نؤمن بأن التكنولوجيا هي مفتاح النجاح في عالم اليوم، ونسعى دائمًا لتقديم حلول مبتكرة وفعالة.</p>
-                <p>خبرتنا تمتد لتشمل تطوير الواجهات الأمامية والخلفية، إدارة قواعد البيانات، تصميم تجربة المستخدم (UX) وواجهة المستخدم (UI)، بالإضافة إلى الاستشارات التقنية. هدفنا هو تحويل أفكارك إلى واقع رقمي ملموس.</p>
-                <div class="about-stats">
-                    <div>
-                        <i class="fas fa-code"></i>
-                        <h3>+50 مشروع</h3>
-                        <p>تم إنجازها بنجاح</p>
-                    </div>
-                    <div>
-                        <i class="fas fa-users"></i>
-                        <h3>+30 عميل</h3>
-                        <p>سعيد وراضٍ</p>
-                    </div>
-                    <div>
-                        <i class="fas fa-award"></i>
-                        <h3>5 سنوات</h3>
-                        <p>من الخبرة</p>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Services Section -->
-    <section id="services" class="services-section section-padding bg-light">
-        <div class="container">
-            <h2 class="section-title">خدماتنا</h2>
-            <div class="services-grid">
-                <div class="service-card">
-                    <i class="fas fa-laptop-code"></i>
-                    <h3>تطوير الويب</h3>
-                    <p>بناء مواقع وتطبيقات ويب قوية ومتجاوبة باستخدام أحدث التقنيات.</p>
-                </div>
-                <div class="service-card">
-                    <i class="fas fa-mobile-alt"></i>
-                    <h3>تطوير التطبيقات</h3>
-                    <p>تصميم وتطوير تطبيقات جوال مبتكرة لنظامي iOS و Android.</p>
-                </div>
-                <div class="service-card">
-                    <i class="fas fa-palette"></i>
-                    <h3>تصميم UX/UI</h3>
-                    <p>إنشاء تجارب مستخدم ممتعة وواجهات جذابة وسهلة الاستخدام.</p>
-                </div>
-                <div class="service-card">
-                    <i class="fas fa-database"></i>
-                    <h3>إدارة قواعد البيانات</h3>
-                    <p>تصميم وتنفيذ وإدارة قواعد بيانات فعالة وآمنة لبياناتك.</p>
-                </div>
-                <div class="service-card">
-                    <i class="fas fa-cloud"></i>
-                    <h3>حلول سحابية</h3>
-                    <p>نشر وإدارة تطبيقاتك على منصات الحوسبة السحابية الرائدة.</p>
-                </div>
-                <div class="service-card">
-                    <i class="fas fa-headset"></i>
-                    <h3>استشارات تقنية</h3>
-                    <p>تقديم استشارات خبراء لمساعدتك في اتخاذ القرارات التقنية الصحيحة.</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-    <!-- Music Remover Section -->
-    <section id="music-remover" class="music-remover-section section-padding">
-        <div class="container">
-            <h2 class="section-title">إزالة الموسيقى من الفيديو</h2>
-            <p class="section-subtitle">ارفع الفيديو الخاص بك وسنقوم بإزالة الموسيقى مع الاحتفاظ بالغناء أو الكلام.</p>
-            
-            <div class="upload-area">
+                <!-- منطقة رفع الملف -->
                 <div class="file-drop-area" id="fileDropArea">
-                    <i class="fas fa-cloud-upload-alt"></i>
-                    <p>اسحب وأفلت الفيديو هنا، أو <span class="browse-files">تصفح الملفات</span></p>
+                    <div class="drop-icon">
+                        <i class="fas fa-cloud-upload-alt"></i>
+                    </div>
+                    <h3>اسحب وأفلت الفيديو هنا</h3>
+                    <p>أو <span class="browse-files">اضغط لاختيار ملف</span> من جهازك (MP4, MOV, MKV, AVI)</p>
                     <input type="file" id="videoUpload" accept="video/*" hidden>
                 </div>
-                <p id="fileName" class="file-name"></p>
-                <div class="progress-bar-container" id="progressBarContainer">
-                    <div class="progress-bar" id="progressBar"></div>
-                </div>
-                <button id="processVideoBtn" class="btn btn-primary" disabled>بدء المعالجة</button>
-                <p id="statusMessage" class="status-message"></p>
-                <div id="downloadArea" class="download-area" style="display: none;">
-                    <h3>الفيديو المعالج جاهز!</h3>
-                    <a id="downloadLink" href="#" class="btn btn-primary" download>تحميل الفيديو</a>
-                </div>
-            </div>
-        </div>
-    </section>
 
-    <!-- Contact Section -->
-    <section id="contact" class="contact-section section-padding bg-light">
-        <div class="container">
-            <h2 class="section-title">تواصل معنا</h2>
-            <p class="section-subtitle">نحن هنا للإجابة على استفساراتك ومساعدتك في مشروعك القادم.</p>
-            <div class="contact-grid">
-                <div class="contact-info">
-                    <h3>معلومات الاتصال</h3>
-                    <p><i class="fas fa-map-marker-alt"></i> 123 شارع الابتكار، مدينة التقنية، البلد</p>
-                    <p><i class="fas fa-phone"></i> +966 50 123 4567</p>
-                    <p><i class="fas fa-envelope"></i> info@cnaiapp.com</p>
-                    <div class="social-links">
-                        <a href="#"><i class="fab fa-facebook-f"></i></a>
-                        <a href="#"><i class="fab fa-twitter"></i></a>
-                        <a href="#"><i class="fab fa-linkedin-in"></i></a>
-                        <a href="#"><i class="fab fa-instagram"></i></a>
+                <!-- معلومات الملف المختار -->
+                <div class="file-info-bar" id="fileInfo" style="display: none;">
+                    <div class="file-details">
+                        <i class="fas fa-file-video"></i>
+                        <div>
+                            <span id="fileName" class="file-name"></span>
+                            <span id="fileSize" class="file-size"></span>
+                        </div>
+                    </div>
+                    <button type="button" id="removeFileBtn" class="btn-icon" title="إزالة الملف">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+
+                <!-- زر التشغيل -->
+                <button id="processVideoBtn" class="btn btn-primary btn-block" disabled>
+                    <i class="fas fa-magic"></i>
+                    <span>بدء إزالة الموسيقى</span>
+                </button>
+
+                <!-- شريط التقدم -->
+                <div class="progress-section" id="progressSection" style="display: none;">
+                    <div class="progress-meta">
+                        <span id="progressStage">جاري التحضير...</span>
+                        <div class="progress-numbers">
+                            <span id="elapsedTime">00:00</span>
+                            <span>•</span>
+                            <span id="progressPercent">0%</span>
+                        </div>
+                    </div>
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="progressBar"></div>
                     </div>
                 </div>
-                <div class="contact-form">
-                    <h3>أرسل لنا رسالة</h3>
-                    <form action="#" method="POST">
-                        <div class="form-group">
-                            <label for="name">الاسم الكامل</label>
-                            <input type="text" id="name" name="name" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="email">البريد الإلكتروني</label>
-                            <input type="email" id="email" name="email" required>
-                        </div>
-                        <div class="form-group">
-                            <label for="subject">الموضوع</label>
-                            <input type="text" id="subject" name="subject">
-                        </div>
-                        <div class="form-group">
-                            <label for="message">رسالتك</label>
-                            <textarea id="message" name="message" rows="5" required></textarea>
-                        </div>
-                        <button type="submit" class="btn btn-primary">إرسال الرسالة</button>
-                    </form>
+
+                <!-- رسائل الحالة والأخطاء -->
+                <div id="statusMessage" class="status-message"></div>
+
+                <!-- منطقة النتيجة والمعاينة والتحميل -->
+                <div id="downloadArea" class="download-area" style="display: none;">
+                    <div class="success-banner">
+                        <i class="fas fa-check-circle"></i>
+                        <h3>تمت إزالة الموسيقى بنجاح!</h3>
+                    </div>
+
+                    <div class="video-preview-wrapper">
+                        <video id="resultVideo" controls playsinline></video>
+                    </div>
+
+                    <div class="action-buttons">
+                        <a id="downloadLink" href="#" class="btn btn-success" download>
+                            <i class="fas fa-download"></i>
+                            <span>تحميل الفيديو</span>
+                        </a>
+                        <button type="button" id="resetBtn" class="btn btn-secondary">
+                            <i class="fas fa-redo"></i>
+                            <span>معالجة فيديو آخر</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </section>
+    </main>
 
-    <!-- Footer Section -->
-    <footer class="main-footer">
-        <div class="container">
-            <p>&copy; 2023 CN AI. جميع الحقوق محفوظة.</p>
-        </div>
+    <footer class="app-footer">
+        <p>CN AI &copy; 2026 - أداة عزل الموسيقى بالذكاء الاصطناعي</p>
     </footer>
 
-    <!-- Scroll to Top Button -->
-    <button id="scrollToTopBtn" class="scroll-to-top-btn" aria-label="Scroll to top">
-        <i class="fas fa-arrow-up"></i>
-    </button>
-
-    <!-- ملف JavaScript المخصص -->
     <script src="script.js"></script>
 </body>
 </html>
