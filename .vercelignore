@@ -1,0 +1,6 @@
+app.py
+Dockerfile
+requirements.txt
+uploads/
+processed/
+temp_demucs_work/
