@@ -1,6 +1,7 @@
 app.py
 Dockerfile
 requirements.txt
+models/
 uploads/
 processed/
 temp_demucs_work/
