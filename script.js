@@ -1,199 +1,224 @@
 document.addEventListener('DOMContentLoaded', () => {
-    // Smooth scrolling for navigation links
-    document.querySelectorAll('a[href^="#"]').forEach(anchor => {
-        anchor.addEventListener('click', function (e) {
-            e.preventDefault();
-
-            document.querySelector(this.getAttribute('href')).scrollIntoView({
-                behavior: 'smooth'
-            });
-
-            // Close mobile menu after clicking a link
-            if (mainNavList.classList.contains('active')) {
-                mainNavList.classList.remove('active');
-            }
-        });
-    });
-
-    // Mobile Navigation Toggle
-    const menuToggle = document.querySelector('.menu-toggle');
-    const mainNavList = document.querySelector('.main-nav .nav-list');
-
-    if (menuToggle && mainNavList) {
-        menuToggle.addEventListener('click', () => {
-            mainNavList.classList.toggle('active');
-        });
-    }
-
-    // Show/Hide Scroll to Top Button
-    const scrollToTopBtn = document.getElementById('scrollToTopBtn');
-
-    if (scrollToTopBtn) {
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 300) { // Show button after scrolling 300px
-                scrollToTopBtn.style.display = 'flex';
-            } else {
-                scrollToTopBtn.style.display = 'none';
-            }
-        });
-
-        scrollToTopBtn.addEventListener('click', () => {
-            window.scrollTo({
-                top: 0,
-                behavior: 'smooth'
-            });
-        });
-    }
-
-    // Active link highlighting based on scroll position (Optional, for more advanced UI)
-    const sections = document.querySelectorAll('section');
-    const navLinks = document.querySelectorAll('.main-nav .nav-list a');
-
-    function activateNavLink() {
-        let current = '';
-        sections.forEach(section => {
-            const sectionTop = section.offsetTop - 100; // Adjust offset for fixed header
-            if (pageYOffset >= sectionTop) {
-                current = section.getAttribute('id');
-            }
-        });
-
-        navLinks.forEach(link => {
-            link.classList.remove('active');
-            if (link.getAttribute('href').includes(current)) {
-                link.classList.add('active');
-            }
-        });
-    }
-
-    window.addEventListener('scroll', activateNavLink);
-    activateNavLink(); // Call on load to set initial active link
-
-
-    // --- Music Remover Logic ---
     const fileDropArea = document.getElementById('fileDropArea');
     const videoUploadInput = document.getElementById('videoUpload');
+    const fileInfo = document.getElementById('fileInfo');
     const fileNameDisplay = document.getElementById('fileName');
+    const fileSizeDisplay = document.getElementById('fileSize');
+    const removeFileBtn = document.getElementById('removeFileBtn');
     const processVideoBtn = document.getElementById('processVideoBtn');
-    const progressBarContainer = document.getElementById('progressBarContainer');
+
+    const progressSection = document.getElementById('progressSection');
+    const progressStage = document.getElementById('progressStage');
+    const progressPercent = document.getElementById('progressPercent');
+    const elapsedTimeDisplay = document.getElementById('elapsedTime');
     const progressBar = document.getElementById('progressBar');
+
     const statusMessage = document.getElementById('statusMessage');
     const downloadArea = document.getElementById('downloadArea');
+    const resultVideo = document.getElementById('resultVideo');
     const downloadLink = document.getElementById('downloadLink');
+    const resetBtn = document.getElementById('resetBtn');
+
+    // يعمل سواء تم فتح الصفحة من سيرفر Flask مباشرة أو عبر Live Server
+    const API_URL = window.location.port === '5000'
+        ? '/process_video'
+        : 'http://127.0.0.1:5000/process_video';
 
     let selectedFile = null;
+    let currentObjectUrl = null;
+    let timerInterval = null;
+    let simulationInterval = null;
 
-    // Handle file selection via click
-    fileDropArea.addEventListener('click', () => {
-        videoUploadInput.click();
+    function formatBytes(bytes) {
+        if (bytes === 0) return '0 Bytes';
+        const k = 1024;
+        const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + ' ' + sizes[i];
+    }
+
+    function setStatus(text, type = 'info') {
+        statusMessage.textContent = text;
+        statusMessage.className = 'status-message' + (text ? ` ${type}` : '');
+    }
+
+    function clearTimers() {
+        if (timerInterval) clearInterval(timerInterval);
+        if (simulationInterval) clearInterval(simulationInterval);
+        timerInterval = null;
+        simulationInterval = null;
+    }
+
+    function revokeCurrentUrl() {
+        if (currentObjectUrl) {
+            URL.revokeObjectURL(currentObjectUrl);
+            currentObjectUrl = null;
+        }
+    }
+
+    function resetUI() {
+        clearTimers();
+        revokeCurrentUrl();
+        selectedFile = null;
+        videoUploadInput.value = '';
+        fileInfo.style.display = 'none';
+        fileDropArea.style.display = 'block';
+        processVideoBtn.disabled = true;
+        progressSection.style.display = 'none';
+        progressBar.style.width = '0%';
+        progressPercent.textContent = '0%';
+        elapsedTimeDisplay.textContent = '00:00';
+        downloadArea.style.display = 'none';
+        resultVideo.removeAttribute('src');
+        setStatus('');
+    }
+
+    // اختيار الملف بالضغط أو السحب والإفلات
+    fileDropArea.addEventListener('click', () => videoUploadInput.click());
+
+    videoUploadInput.addEventListener('change', (e) => {
+        handleFiles(e.target.files);
     });
 
-    // Handle file selection via input change
-    videoUploadInput.addEventListener('change', (event) => {
-        handleFiles(event.target.files);
-    });
-
-    // Handle drag and drop
     ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
-        fileDropArea.addEventListener(eventName, preventDefaults, false);
+        fileDropArea.addEventListener(eventName, (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+        });
     });
 
     ['dragenter', 'dragover'].forEach(eventName => {
-        fileDropArea.addEventListener(eventName, highlight, false);
+        fileDropArea.addEventListener(eventName, () => fileDropArea.classList.add('highlight'));
     });
 
     ['dragleave', 'drop'].forEach(eventName => {
-        fileDropArea.addEventListener(eventName, unhighlight, false);
+        fileDropArea.addEventListener(eventName, () => fileDropArea.classList.remove('highlight'));
     });
 
-    fileDropArea.addEventListener('drop', handleDrop, false);
-
-    function preventDefaults(e) {
-        e.preventDefault();
-        e.stopPropagation();
-    }
-
-    function highlight() {
-        fileDropArea.classList.add('highlight');
-    }
-
-    function unhighlight() {
-        fileDropArea.classList.remove('highlight');
-    }
-
-    function handleDrop(e) {
-        const dt = e.dataTransfer;
-        const files = dt.files;
-        handleFiles(files);
-    }
+    fileDropArea.addEventListener('drop', (e) => {
+        handleFiles(e.dataTransfer.files);
+    });
 
     function handleFiles(files) {
-        selectedFile = null;
-        fileNameDisplay.textContent = '';
-        processVideoBtn.disabled = true;
-        statusMessage.textContent = '';
-        progressBarContainer.style.display = 'none';
-        progressBar.style.width = '0%';
-        downloadArea.style.display = 'none';
+        if (!files || files.length === 0) return;
 
-        if (files.length > 0) {
-            const file = files[0];
-            if (file.type.startsWith('video/')) {
-                selectedFile = file;
-                fileNameDisplay.textContent = `الملف المحدد: ${file.name}`;
-                processVideoBtn.disabled = false;
-                statusMessage.textContent = 'يمكنك الآن بدء المعالجة.';
-            } else {
-                statusMessage.textContent = 'الرجاء اختيار ملف فيديو صالح.';
-            }
-        }
-    }
+        const file = files[0];
+        const isVideo = file.type.startsWith('video/') || /\.(mp4|mov|mkv|avi|webm|flv)$/i.test(file.name);
 
-    processVideoBtn.addEventListener('click', async () => {
-        if (!selectedFile) {
-            statusMessage.textContent = 'الرجاء تحديد ملف فيديو أولاً.';
+        if (!isVideo) {
+            setStatus('الرجاء اختيار ملف فيديو صالح.', 'error');
             return;
         }
 
-        processVideoBtn.disabled = true;
-        statusMessage.textContent = 'جاري رفع ومعالجة الفيديو، قد يستغرق الأمر بعض الوقت...';
-        progressBarContainer.style.display = 'block';
-        progressBar.style.width = '0%';
+        revokeCurrentUrl();
+        selectedFile = file;
+        fileNameDisplay.textContent = file.name;
+        fileSizeDisplay.textContent = formatBytes(file.size);
+
+        fileDropArea.style.display = 'none';
+        fileInfo.style.display = 'flex';
         downloadArea.style.display = 'none';
+        progressSection.style.display = 'none';
+        processVideoBtn.disabled = false;
+        setStatus('');
+    }
+
+    removeFileBtn.addEventListener('click', resetUI);
+    resetBtn.addEventListener('click', resetUI);
+
+    // بدء المعالجة
+    processVideoBtn.addEventListener('click', () => {
+        if (!selectedFile) return;
+
+        processVideoBtn.disabled = true;
+        removeFileBtn.disabled = true;
+        downloadArea.style.display = 'none';
+        progressSection.style.display = 'block';
+        setStatus('لا تغلق الصفحة أثناء المعالجة، قد يستغرق عزل الموسيقى دقيقة أو أكثر حسب طول الفيديو.', 'info');
+
+        let currentProgress = 0;
+        let secondsElapsed = 0;
+
+        progressStage.textContent = 'جاري رفع الفيديو...';
+        progressBar.style.width = '0%';
+        progressPercent.textContent = '0%';
+        elapsedTimeDisplay.textContent = '00:00';
+
+        timerInterval = setInterval(() => {
+            secondsElapsed++;
+            const mins = String(Math.floor(secondsElapsed / 60)).padStart(2, '0');
+            const secs = String(secondsElapsed % 60).padStart(2, '0');
+            elapsedTimeDisplay.textContent = `${mins}:${secs}`;
+        }, 1000);
 
         const formData = new FormData();
         formData.append('video', selectedFile);
 
-        try {
-            // Replace with your actual backend URL
-            const response = await fetch('http://127.0.0.1:5000/process_video', {
-                method: 'POST',
-                body: formData,
-                // Add a custom header for progress tracking (optional, backend needs to support it)
-                // headers: {
-                //     'X-Requested-With': 'XMLHttpRequest'
-                // }
-            });
+        const xhr = new XMLHttpRequest();
+        xhr.open('POST', API_URL, true);
+        xhr.responseType = 'blob';
 
-            if (response.ok) {
-                const blob = await response.blob();
-                const url = URL.createObjectURL(blob);
-                downloadLink.href = url;
-                downloadLink.download = `processed_${selectedFile.name}`;
-                statusMessage.textContent = 'تمت المعالجة بنجاح!';
+        // تتبع نسبة رفع الملف (من 0% إلى 25%)
+        xhr.upload.onprogress = (event) => {
+            if (event.lengthComputable) {
+                const uploadRatio = event.loaded / event.total;
+                currentProgress = Math.round(uploadRatio * 25);
+                progressBar.style.width = `${currentProgress}%`;
+                progressPercent.textContent = `${currentProgress}%`;
+
+                if (uploadRatio >= 1 && !simulationInterval) {
+                    progressStage.textContent = 'جاري عزل الموسيقى بالذكاء الاصطناعي...';
+                    // تقدم تدريجي أثناء معالجة Demucs حتى 92%
+                    simulationInterval = setInterval(() => {
+                        if (currentProgress < 92) {
+                            currentProgress += 1;
+                            progressBar.style.width = `${currentProgress}%`;
+                            progressPercent.textContent = `${currentProgress}%`;
+                        }
+                    }, 1800);
+                }
+            }
+        };
+
+        xhr.onload = async () => {
+            clearTimers();
+            processVideoBtn.disabled = false;
+            removeFileBtn.disabled = false;
+
+            if (xhr.status === 200) {
+                progressStage.textContent = 'اكتملت المعالجة!';
                 progressBar.style.width = '100%';
+                progressPercent.textContent = '100%';
+                setStatus('');
+
+                revokeCurrentUrl();
+                currentObjectUrl = URL.createObjectURL(xhr.response);
+
+                const baseName = selectedFile.name.replace(/\.[^/.]+$/, '');
+                resultVideo.src = currentObjectUrl;
+                downloadLink.href = currentObjectUrl;
+                downloadLink.download = `${baseName}_nomusic.mp4`;
                 downloadArea.style.display = 'block';
             } else {
-                const errorText = await response.text();
-                statusMessage.textContent = `حدث خطأ في المعالجة: ${errorText}`;
-                progressBar.style.width = '0%';
+                progressSection.style.display = 'none';
+                let errorMsg = 'حدث خطأ أثناء معالجة الفيديو.';
+                try {
+                    const text = await xhr.response.text();
+                    const parsed = JSON.parse(text);
+                    if (parsed.error) errorMsg = parsed.error;
+                } catch (_) {}
+                setStatus(`فشلت المعالجة: ${errorMsg}`, 'error');
             }
-        } catch (error) {
-            console.error('Error:', error);
-            statusMessage.textContent = `حدث خطأ أثناء الاتصال بالخادم: ${error.message}`;
-            progressBar.style.width = '0%';
-        } finally {
+        };
+
+        xhr.onerror = () => {
+            clearTimers();
             processVideoBtn.disabled = false;
-        }
+            removeFileBtn.disabled = false;
+            progressSection.style.display = 'none';
+            setStatus('تعذر الاتصال بالخادم. تأكد من تشغيل ملف app.py على المنفذ 5000.', 'error');
+        };
+
+        xhr.send(formData);
     });
 });
