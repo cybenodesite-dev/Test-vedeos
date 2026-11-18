@@ -2,6 +2,7 @@ from flask import Flask, request, send_file, jsonify
 from flask_cors import CORS
 import os
 import sys
+import time
 import subprocess
 import shutil
 from pathlib import Path
@@ -20,13 +21,28 @@ PROCESSED_FOLDER.mkdir(exist_ok=True)
 TEMP_FOLDER.mkdir(exist_ok=True)
 
 
+def cleanup_old_processed_files(max_age_seconds=3600):
+    """حذف الفيديوهات المعالجة القديمة لتوفير مساحة السيرفر"""
+    now = time.time()
+    for item in PROCESSED_FOLDER.glob('*'):
+        try:
+            if item.is_file() and (now - item.stat().st_mtime) > max_age_seconds:
+                item.unlink()
+        except Exception:
+            pass
+
+
 @app.route('/')
 def index():
-    return send_file('index.html')
+    if Path('index.html').exists():
+        return send_file('index.html')
+    return jsonify({"status": "running", "service": "CN AI Music Remover API"})
 
 
 @app.route('/process_video', methods=['POST'])
 def process_video():
+    cleanup_old_processed_files()
+
     if 'video' not in request.files:
         return jsonify({"error": "لم يتم إرسال أي ملف فيديو."}), 400
 
@@ -35,7 +51,7 @@ def process_video():
         return jsonify({"error": "لم يتم اختيار ملف."}), 400
 
     if not shutil.which("ffmpeg"):
-        return jsonify({"error": "أداة FFmpeg غير مثبتة أو غير مضافة إلى مسار النظام (PATH)."}), 500
+        return jsonify({"error": "أداة FFmpeg غير مثبتة على السيرفر."}), 500
 
     unique_id = uuid.uuid4().hex
     original_filename = file.filename
@@ -99,7 +115,7 @@ def process_video():
         app.logger.error(f"FFmpeg/Demucs error: {err_msg}")
         if "does not contain any stream" in err_msg or "Output file does not contain any stream" in err_msg:
             return jsonify({"error": "الفيديو المرفوع لا يحتوي على مسار صوتي."}), 400
-        return jsonify({"error": f"فشلت المعالجة أثناء تشغيل FFmpeg أو Demucs."}), 500
+        return jsonify({"error": "فشلت المعالجة أثناء تشغيل FFmpeg أو Demucs."}), 500
 
     except FileNotFoundError as e:
         app.logger.error(f"File not found: {e}")
@@ -119,4 +135,5 @@ def process_video():
 
 
 if __name__ == '__main__':
-    app.run(debug=True, port=5000)
+    port = int(os.environ.get('PORT', 7860))
+    app.run(host='0.0.0.0', port=port, debug=False)
