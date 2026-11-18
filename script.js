@@ -1,3 +1,10 @@
+// ضع هنا رابط السيرفر بعد رفعه على Hugging Face Spaces (بدون شرطة مائلة / في النهاية)
+const BACKEND_URL = 'https://YOUR-SPACE-NAME.hf.space';
+
+const API_URL = (window.location.hostname === '127.0.0.1' || window.location.hostname === 'localhost')
+    ? 'http://127.0.0.1:7860/process_video'
+    : `${BACKEND_URL}/process_video`;
+
 document.addEventListener('DOMContentLoaded', () => {
     const fileDropArea = document.getElementById('fileDropArea');
     const videoUploadInput = document.getElementById('videoUpload');
@@ -18,11 +25,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const resultVideo = document.getElementById('resultVideo');
     const downloadLink = document.getElementById('downloadLink');
     const resetBtn = document.getElementById('resetBtn');
-
-    // يعمل سواء تم فتح الصفحة من سيرفر Flask مباشرة أو عبر Live Server
-    const API_URL = window.location.port === '5000'
-        ? '/process_video'
-        : 'http://127.0.0.1:5000/process_video';
 
     let selectedFile = null;
     let currentObjectUrl = null;
@@ -73,7 +75,6 @@ document.addEventListener('DOMContentLoaded', () => {
         setStatus('');
     }
 
-    // اختيار الملف بالضغط أو السحب والإفلات
     fileDropArea.addEventListener('click', () => videoUploadInput.click());
 
     videoUploadInput.addEventListener('change', (e) => {
@@ -126,7 +127,6 @@ document.addEventListener('DOMContentLoaded', () => {
     removeFileBtn.addEventListener('click', resetUI);
     resetBtn.addEventListener('click', resetUI);
 
-    // بدء المعالجة
     processVideoBtn.addEventListener('click', () => {
         if (!selectedFile) return;
 
@@ -158,7 +158,6 @@ document.addEventListener('DOMContentLoaded', () => {
         xhr.open('POST', API_URL, true);
         xhr.responseType = 'blob';
 
-        // تتبع نسبة رفع الملف (من 0% إلى 25%)
         xhr.upload.onprogress = (event) => {
             if (event.lengthComputable) {
                 const uploadRatio = event.loaded / event.total;
@@ -168,7 +167,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (uploadRatio >= 1 && !simulationInterval) {
                     progressStage.textContent = 'جاري عزل الموسيقى بالذكاء الاصطناعي...';
-                    // تقدم تدريجي أثناء معالجة Demucs حتى 92%
                     simulationInterval = setInterval(() => {
                         if (currentProgress < 92) {
                             currentProgress += 1;
@@ -216,7 +214,7 @@ document.addEventListener('DOMContentLoaded', () => {
             processVideoBtn.disabled = false;
             removeFileBtn.disabled = false;
             progressSection.style.display = 'none';
-            setStatus('تعذر الاتصال بالخادم. تأكد من تشغيل ملف app.py على المنفذ 5000.', 'error');
+            setStatus('تعذر الاتصال بالخادم. تأكد من أن السيرفر يعمل وأن رابط BACKEND_URL صحيح.', 'error');
         };
 
         xhr.send(formData);
